@@ -1,1 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Consensus Paradox - Coordination Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🔗 The Consensus Paradox</h1>
+            <p class="subtitle">Solving Coordination Problems Through Cryptographic Proof</p>
+            <div class="wallet-info">
+                <button id="connectWallet" class="btn btn-primary">Connect Wallet</button>
+                <div id="walletAddress" class="wallet-address hidden"></div>
+                <div id="networkInfo" class="network-info hidden"></div>
+            </div>
+        </header>
 
+        <main class="main-content">
+            <!-- Contract Status Section -->
+            <section class="card">
+                <h2>📊 Contract Status</h2>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="label">Current Round:</span>
+                        <span id="currentRound" class="value">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">Total Rounds:</span>
+                        <span id="totalRounds" class="value">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">Min Stake:</span>
+                        <span id="minStake" class="value">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="label">Your Rewards:</span>
+                        <span id="userRewards" class="value">-</span>
+                    </div>
+                </div>
+                <button id="refreshStatus" class="btn btn-secondary">🔄 Refresh Status</button>
+            </section>
+
+            <!-- Admin Panel (Only for contract owner) -->
+            <section id="adminPanel" class="card hidden">
+                <h2>⚙️ Admin Panel</h2>
+                <div class="admin-controls">
+                    <h3>Start New Coordination Round</h3>
+                    <div class="form-group">
+                        <label for="commitDuration">Commit Phase Duration (minutes):</label>
+                        <input type="number" id="commitDuration" min="1" value="10" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="revealDuration">Reveal Phase Duration (minutes):</label>
+                        <input type="number" id="revealDuration" min="1" value="5" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="consensusThreshold">Consensus Threshold (51-100%):</label>
+                        <input type="number" id="consensusThreshold" min="51" max="100" value="67" class="form-input">
+                    </div>
+                    <button id="startRound" class="btn btn-primary">🚀 Start New Round</button>
+                </div>
+            </section>
+
+            <!-- Current Round Info -->
+            <section class="card">
+                <h2>🎯 Current Round Information</h2>
+                <div id="roundInfo" class="round-info">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="label">Round ID:</span>
+                            <span id="roundId" class="value">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Status:</span>
+                            <span id="roundStatus" class="value status-badge">No Active Round</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Phase:</span>
+                            <span id="currentPhase" class="value phase-badge">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Participants:</span>
+                            <span id="participantCount" class="value">0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Total Stake:</span>
+                            <span id="totalStake" class="value">0 ETH</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Consensus Threshold:</span>
+                            <span id="thresholdDisplay" class="value">-</span>
+                        </div>
+                    </div>
+
+                    <div id="phaseTimer" class="phase-timer hidden">
+                        <h4 id="timerLabel">Time Remaining:</h4>
+                        <div id="countdown" class="countdown">00:00:00</div>
+                    </div>
+
+                    <div id="roundResult" class="round-result hidden">
+                        <h4>🎊 Round Result:</h4>
+                        <p id="resultText"></p>
+                        <div id="coordinationStats" class="coordination-stats"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Participation Section -->
+            <section class="card">
+                <h2>🎲 Participate in Coordination</h2>
+
+                <!-- Join Round (Commit Phase) -->
+                <div id="commitSection" class="participation-section hidden">
+                    <h3>💭 Commit Your Choice</h3>
+                    <p class="instruction">Choose your coordination option and commit with a stake. Your choice will be hidden until the reveal phase.</p>
+
+                    <div class="choice-selection">
+                        <div class="choice-group">
+                            <input type="radio" id="choice0" name="choice" value="0" class="choice-radio">
+                            <label for="choice0" class="choice-label choice-0">
+                                <span class="choice-icon">🔴</span>
+                                <span class="choice-text">Option A (0)</span>
+                            </label>
+                        </div>
+                        <div class="choice-group">
+                            <input type="radio" id="choice1" name="choice" value="1" class="choice-radio">
+                            <label for="choice1" class="choice-label choice-1">
+                                <span class="choice-icon">🔵</span>
+                                <span class="choice-text">Option B (1)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="stakeAmount">Stake Amount (ETH):</label>
+                        <input type="number" id="stakeAmount" step="0.001" min="0.001" placeholder="0.01" class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nonce">Secret Nonce (random number for commitment):</label>
+                        <input type="number" id="nonce" placeholder="Enter any random number" class="form-input">
+                        <button id="generateNonce" class="btn btn-small">🎲 Generate Random</button>
+                    </div>
+
+                    <button id="commitChoice" class="btn btn-success">🔐 Commit Choice</button>
+                </div>
+
+                <!-- Reveal Choice (Reveal Phase) -->
+                <div id="revealSection" class="participation-section hidden">
+                    <h3>🔓 Reveal Your Choice</h3>
+                    <p class="instruction">Reveal your committed choice to complete the coordination process.</p>
+
+                    <div class="reveal-info">
+                        <div class="commitment-display">
+                            <span class="label">Your Commitment Hash:</span>
+                            <span id="userCommitment" class="hash-value">-</span>
+                        </div>
+                        <div class="stake-display">
+                            <span class="label">Your Stake:</span>
+                            <span id="userStake" class="value">-</span>
+                        </div>
+                    </div>
+
+                    <div class="reveal-form">
+                        <div class="form-group">
+                            <label for="revealChoice">Your Original Choice:</label>
+                            <select id="revealChoice" class="form-input">
+                                <option value="">Select your choice...</option>
+                                <option value="0">🔴 Option A (0)</option>
+                                <option value="1">🔵 Option B (1)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="revealNonce">Your Original Nonce:</label>
+                            <input type="number" id="revealNonce" placeholder="Enter the same nonce used in commitment" class="form-input">
+                        </div>
+                    </div>
+
+                    <button id="revealChoice" class="btn btn-warning">🔓 Reveal Choice</button>
+                </div>
+
+                <!-- Waiting/Status Display -->
+                <div id="waitingSection" class="participation-section">
+                    <div class="status-message">
+                        <h3 id="statusTitle">⏳ Waiting for Active Round</h3>
+                        <p id="statusMessage">No active coordination round. Wait for an admin to start a new round.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Your Participation History -->
+            <section class="card">
+                <h2>📈 Your Participation</h2>
+                <div class="participation-stats">
+                    <div class="stat-item">
+                        <span class="stat-value" id="userHistory">0</span>
+                        <span class="stat-label">Successful Coordinations</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="pendingRewards">0 ETH</span>
+                        <span class="stat-label">Pending Rewards</span>
+                    </div>
+                </div>
+                <button id="claimRewards" class="btn btn-success" disabled>💰 Claim Rewards</button>
+            </section>
+
+            <!-- How to Play -->
+            <section class="card">
+                <h2>❓ How to Play</h2>
+                <div class="instructions">
+                    <div class="instruction-step">
+                        <h4>1. 🔐 Commit Phase</h4>
+                        <p>Choose between Option A (0) or Option B (1), set your stake, and generate a secret nonce. Your choice is cryptographically hidden from others.</p>
+                    </div>
+                    <div class="instruction-step">
+                        <h4>2. 🔓 Reveal Phase</h4>
+                        <p>Reveal your original choice and nonce. The smart contract verifies your cryptographic proof automatically.</p>
+                    </div>
+                    <div class="instruction-step">
+                        <h4>3. 🎯 Coordination</h4>
+                        <p>If enough participants coordinate on the same choice (reach the consensus threshold), everyone who chose the majority option wins rewards!</p>
+                    </div>
+                    <div class="instruction-step">
+                        <h4>4. 💰 Rewards</h4>
+                        <p>Successful coordinators share increased rewards. Failed coordination returns your original stake.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2025 The Consensus Paradox - Solving Coordination Problems Through Cryptographic Proof</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <p id="loadingMessage">Processing transaction...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.0/dist/ethers.umd.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
